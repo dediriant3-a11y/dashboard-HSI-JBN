@@ -1,611 +1,582 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Interactive Resume - MotoGP Mandalika 2026</title>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- PapaParse CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #1e3a8a;
-      --primary-light: #2563eb;
-      --bg: #0f172a;
-      --card-bg: rgba(255, 255, 255, 0.92);
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --border: #cbd5e1;
-      
-      --color-done: #059669;
-      --color-ogp: #d97706;
-      --color-input: #0284c7;
-      
-      --main-venue-bg: rgba(254, 252, 232, 0.95);
-      --main-venue-border: #fef08a;
-      --main-venue-badge: #78350f;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text-main);
-      padding: 32px;
-      position: relative;
-      min-height: 100vh;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('images/bg-motogp.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      opacity: 0.22;
-      z-index: -1;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 16px;
-      background-color: var(--card-bg);
-      padding: 20px 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(8px);
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .header-logos {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-right: 2px solid var(--border);
-      padding-right: 20px;
-    }
-
-    .logo-img {
-      height: 48px;
-      width: auto;
-      object-fit: contain;
-    }
-
-    .logo-motogp {
-      background-color: #000000;
-      padding: 6px 12px;
-      border-radius: 6px;
-    }
-
-    .header-title h1 {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .header-title p {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .badge-event {
-      background: #e0e7ff;
-      color: #3730a3;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      margin-bottom: 28px;
-    }
-
-    @media (max-width: 992px) {
-      .metrics-grid {
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      }
-    }
-
-    .metric-card {
-      background-color: var(--card-bg);
-      padding: 20px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      backdrop-filter: blur(8px);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .metric-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 5px;
-    }
-
-    .metric-card.total::before { background-color: var(--primary-light); }
-    .metric-card.input::before { background-color: var(--color-input); }
-    .metric-card.ogp::before { background-color: var(--color-ogp); }
-    .metric-card.done::before { background-color: var(--color-done); }
-    .metric-card.achieve::before { background-color: var(--color-done); }
-
-    .metric-card h3 {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    .metric-card .value {
-      font-size: 26px;
-      font-weight: 700;
-    }
-
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 24px;
-      margin-bottom: 32px;
-    }
-
-    @media (max-width: 992px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .chart-card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      padding: 24px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      backdrop-filter: blur(8px);
-    }
-
-    .chart-card h2 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      color: var(--text-main);
-    }
-
-    .chart-container {
-      position: relative;
-      height: 320px;
-    }
-
-    .table-card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      padding: 24px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      backdrop-filter: blur(8px);
-    }
-
-    .table-header-flex {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .table-card h2 {
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .legend-main-venue {
-      font-size: 12px;
-      background-color: var(--main-venue-bg);
-      color: var(--main-venue-badge);
-      border: 1px solid var(--main-venue-border);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-      text-align: left;
-    }
-
-    th {
-      background-color: rgba(241, 245, 249, 0.9);
-      color: var(--text-muted);
-      font-weight: 700;
-      padding: 12px 16px;
-      border-bottom: 2px solid var(--border);
-    }
-
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    tr.row-main-venue {
-      background-color: var(--main-venue-bg);
-    }
-
-    tr.row-main-venue td {
-      border-bottom: 1px solid var(--main-venue-border);
-    }
-
-    tr:hover {
-      background-color: rgba(226, 232, 240, 0.8);
-    }
-
-    tr.row-main-venue:hover {
-      background-color: #fef08a;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .badge-done { background: #d1fae5; color: #065f46; }
-    .badge-ogp { background: #fef3c7; color: #92400e; }
-    .badge-input { background: #e0f2fe; color: #0369a1; }
-
-    .achieve-text {
-      font-weight: 700;
-      color: #047857;
-    }
-
-    .total-row {
-      background-color: rgba(241, 245, 249, 0.95);
-      font-weight: 700;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROVISIONING NEW SALES INDIBIZ TR3 JBN MTD H-1</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS (xlsx) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
 </head>
-<body>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-  <div class="header">
-    <div class="header-left">
-      <div class="header-logos">
-        <img src="images/logo-telkom.png" alt="Telkom Indonesia" class="logo-img">
-        <img src="images/logo-motogp.png" alt="MotoGP" class="logo-img logo-motogp">
-      </div>
-      <div class="header-title">
-        <h1>Dashboard Resume Integrasi Layanan</h1>
-        <p>Sumber Data: Live Google Spreadsheet (Sheet RESUME)</p>
-      </div>
-    </div>
-    <div class="badge-event">MOTOGP MANDALIKA 2026</div>
-  </div>
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-red-700 via-red-600 to-rose-700 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="w-full md:w-auto">
+                    <div class="flex items-start space-x-3">
+                        <span class="bg-white/20 p-2.5 rounded-xl backdrop-blur-md mt-1 flex-shrink-0">
+                            <i class="fa-solid fa-chart-line text-2xl"></i>
+                        </span>
+                        <div class="flex-1">
+                            <!-- Judul Utama 1 Baris Utuh -->
+                            <h1 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight uppercase whitespace-nowrap">
+                                PROVISIONING NEW SALES INDIBIZ TR3 JBN MTD H-1
+                            </h1>
+                            
+                            <!-- Subtitle Detail 3 Baris -->
+                            <div class="text-red-100 text-xs sm:text-sm mt-1 space-y-0.5" id="subtitle-info">
+                                <p id="info-tgl-report"><i class="fa-regular fa-calendar-check mr-1"></i> Tanggal Report : -</p>
+                                <p id="info-periode"><i class="fa-regular fa-clock mr-1"></i> PERIODE ORDER & PS : -</p>
+                                <p id="info-last-update"><i class="fa-solid fa-rotate mr-1"></i> Last update proses : -</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Github & Input Config -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="relative flex-1 sm:w-80">
+                        <input type="text" id="github-url" 
+                               value="https://raw.githubusercontent.com/dediriant3-a11y/dashboard-ReportJBN/main/data.xlsx" 
+                               placeholder="URL Raw GitHub data.xlsx" 
+                               class="w-full pl-9 pr-3 py-2 text-xs text-slate-900 rounded-lg border-0 shadow-inner focus:ring-2 focus:ring-red-300 font-mono">
+                        <i class="fa-brands fa-github absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+                    </div>
+                    <button onclick="fetchDataFromGitHub()" 
+                            class="bg-white text-red-700 hover:bg-red-50 font-bold px-4 py-2 rounded-lg text-xs shadow transition duration-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-sync" id="btn-sync-icon"></i> Muat Data GitHub
+                    </button>
+                    <label class="bg-red-800 hover:bg-red-900 text-white font-semibold px-3 py-2 rounded-lg text-xs shadow cursor-pointer transition duration-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-upload"></i> Upload Lokal
+                        <input type="file" id="file-input" accept=".xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  <div class="metrics-grid">
-    <div class="metric-card total">
-      <h3>Total Order</h3>
-      <div class="value" id="total-order" style="color: var(--primary-light)">-</div>
-    </div>
-    <div class="metric-card input">
-      <h3>INPUT ORDER</h3>
-      <div class="value" id="total-input" style="color: var(--color-input)">-</div>
-    </div>
-    <div class="metric-card ogp">
-      <h3>OGP (On Going)</h3>
-      <div class="value" id="total-ogp" style="color: var(--color-ogp)">-</div>
-    </div>
-    <div class="metric-card done">
-      <h3>DONE</h3>
-      <div class="value" id="total-done" style="color: var(--color-done)">-</div>
-    </div>
-    <div class="metric-card achieve">
-      <h3>ACHIEVE DONE (%)</h3>
-      <div class="value" id="total-achieve" style="color: var(--color-done)">-</div>
-    </div>
-  </div>
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-  <div class="charts-grid">
-    <div class="chart-card">
-      <h2>Status Integrasi Per Venue</h2>
-      <div class="chart-container">
-        <canvas id="venueChart"></canvas>
-      </div>
-    </div>
+        <!-- Notification Banner -->
+        <div id="status-message" class="hidden p-4 rounded-xl text-sm font-semibold flex items-center justify-between shadow-sm"></div>
 
-    <div class="chart-card">
-      <h2>Persentase Total Status</h2>
-      <div class="chart-container">
-        <canvas id="statusChart"></canvas>
-      </div>
-    </div>
-  </div>
+        <!-- KPI Cards Grid -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+            <!-- Card 1: TOTAL RE -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider">TOTAL RE</span>
+                    <span class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-clipboard-list"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-slate-900" id="kpi-re">0</div>
+                <div class="text-xs text-slate-500 mt-1">Register Total</div>
+            </div>
 
-  <div class="table-card">
-    <div class="table-header-flex">
-      <h2>Rincian Data Per Venue & Layanan</h2>
-      <span class="legend-main-venue">★ VENUE UTAMA</span>
-    </div>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>VENUE</th>
-            <th>LAYANAN</th>
-            <th>DONE</th>
-            <th>ACHIEVE (%)</th>
-            <th>INPUT ORDER</th>
-            <th>OGP</th>
-            <th>TOTAL</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <tr><td colspan="7" style="text-align:center;">Memuat data spreadsheet...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+            <!-- Card 2: TOTAL PI -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider">TOTAL PI</span>
+                    <span class="p-2 bg-purple-50 text-purple-600 rounded-lg"><i class="fa-solid fa-spinner"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-slate-900" id="kpi-pi">0</div>
+                <div class="text-xs text-slate-500 mt-1">Provisioning Issued</div>
+            </div>
 
-  <script>
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS5lT9nqQFaO2f0Hl3WtpIL5Vq35tmHMmuCeHOuNbv2B33t3UPk11ysHKoiiKaSnsGuBHtTi5fh6zdR/pub?gid=670940536&single=true&output=csv';
+            <!-- Card 3: TOTAL QC2 -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider">TOTAL QC2</span>
+                    <span class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i class="fa-solid fa-list-check"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-slate-900" id="kpi-qc2">0</div>
+                <div class="text-xs text-slate-500 mt-1">Quality Control</div>
+            </div>
 
-    const mainVenuesList = ['MEDIA CENTER', 'PADDOCK', 'PIT BUILDING', 'RACE CONTROL', 'TV COMPOUND', 'VIP DELUXE'];
-    let venueChart, statusChart;
+            <!-- Card 4: TOTAL FALLOUT -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider">TOTAL FALLOUT</span>
+                    <span class="p-2 bg-rose-50 text-rose-600 rounded-lg"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-rose-600" id="kpi-fallout">0</div>
+                <div class="text-xs text-slate-500 mt-1">Kendala</div>
+            </div>
 
-    Papa.parse(csvUrl, {
-      download: true,
-      header: false,
-      skipEmptyLines: false,
-      complete: function(results) {
-        renderDashboard(results.data);
-      }
-    });
+            <!-- Card 5: TOTAL PS -->
+            <div class="glass-card rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                <div class="flex items-center justify-between text-slate-500 mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider">TOTAL PS</span>
+                    <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-circle-check"></i></span>
+                </div>
+                <div class="text-3xl font-extrabold text-emerald-600" id="kpi-ps">0</div>
+                <div class="text-xs text-slate-500 mt-1">Provisioning Success</div>
+            </div>
+        </section>
 
-    function cleanNum(val) {
-      if (!val) return 0;
-      let clean = val.toString().replace(/[^0-9]/g, '');
-      return parseInt(clean) || 0;
-    }
+        <!-- Charts Section (Grafik Batang & Pie Chart) -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Grafik Batang PS per Witel -->
+            <div class="lg:col-span-2 glass-card rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Total Provisioning Success (PS) Per Witel</h3>
+                        <p class="text-xs text-slate-500">Perbandingan jumlah order PS sukses antar Witel</p>
+                    </div>
+                    <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg text-sm"><i class="fa-solid fa-chart-column"></i></span>
+                </div>
+                <div class="h-64 sm:h-72">
+                    <canvas id="psBarChart"></canvas>
+                </div>
+            </div>
 
-    function isMainVenue(name) {
-      if (!name) return false;
-      return name.includes('★') || mainVenuesList.some(mv => name.toUpperCase().includes(mv));
-    }
+            <!-- Grafik Pie Komposisi Status -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Komposisi Status Order</h3>
+                        <p class="text-xs text-slate-500">Persentase tahapan status order regional</p>
+                    </div>
+                    <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm"><i class="fa-solid fa-chart-pie"></i></span>
+                </div>
+                <div class="h-64 sm:h-72 flex items-center justify-center">
+                    <canvas id="statusPieChart"></canvas>
+                </div>
+            </div>
+        </section>
 
-    function renderDashboard(data) {
-      if (!data || data.length === 0) return;
+        <!-- Main Data Table -->
+        <section class="glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Rincian Per Witel</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Monitoring performa pengerjaan order per Witel beserta persentase target pencapaian.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center text-xs font-medium text-slate-600 gap-1.5 bg-slate-100 px-3 py-1.5 rounded-lg">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Target Tercapai
+                    </span>
+                    <span class="inline-flex items-center text-xs font-medium text-slate-600 gap-1.5 bg-slate-100 px-3 py-1.5 rounded-lg">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Di Bawah Target
+                    </span>
+                </div>
+            </div>
 
-      let colVenue = 0, colLayanan = 1, colDone = -1, colInput = -1, colOgp = -1;
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-xs tracking-wider">
+                            <th class="py-4 px-4">WITEL</th>
+                            <th class="py-4 px-3 text-right">RE</th>
+                            <th class="py-4 px-3 text-right">PRE PI</th>
+                            <th class="py-4 px-3 text-right">PI</th>
+                            <th class="py-4 px-3 text-right">FALLOUT</th>
+                            <th class="py-4 px-3 text-right">QC2</th>
+                            <th class="py-4 px-3 text-right">PS</th>
+                            <th class="py-4 px-4 text-center">PS/RE (%)<br><span class="text-[10px] font-normal text-slate-500">(Target 80%)</span></th>
+                            <th class="py-4 px-4 text-center">PS/PI (%)<br><span class="text-[10px] font-normal text-slate-500">(Target 94%)</span></th>
+                            <th class="py-4 px-4 text-center">TTI COMPLY<br><span class="text-[10px] font-normal text-slate-500">(Target 94%)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="divide-y divide-slate-100 text-slate-700">
+                        <tr>
+                            <td colspan="10" class="py-8 text-center text-slate-400">
+                                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                                <p>Sedang memuat data...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-      data.forEach((row) => {
-        row.forEach((cell, idx) => {
-          let str = cell.trim().toUpperCase();
-          if (str === 'DONE') colDone = idx;
-          if (str === 'INPUT ORDER') colInput = idx;
-          if (str === 'OGP' || str === 'PROGRESS' || str.includes('PROGRESS') || str.includes('ON GOING')) {
-            colOgp = idx;
-          }
+        <!-- Keterangan SLA WISA 2026 -->
+        <section class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200">
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-red-600"></i> * SLA WISA 2026
+            </h3>
+            <ol class="list-decimal list-inside text-xs text-slate-700 space-y-1.5 font-medium">
+                <li><span class="font-semibold text-slate-900">TTI Compliance HSI (AO/MO)</span> | 1x24 jam 94%</li>
+                <li><span class="font-semibold text-slate-900">Compliance Order Aging (AOSODOMORO)</span> 3x24 jam 90%</li>
+                <li><span class="font-semibold text-slate-900">PS to PI Ratio HSI (AO/MO/PDA)</span> 94%</li>
+                <li><span class="font-semibold text-slate-900">Fallout Order HSI (AOSODOMORO)</span> 1x12 jam &gt; 90%</li>
+            </ol>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            &copy; 2026 Dashboard Indibiz TR3 JBN. Automated Sheet4 Reader.
+        </div>
+    </footer>
+
+    <!-- JavaScript Script -->
+    <script>
+        const TARGET_PS_RE = 0.80; 
+        const TARGET_PS_PI = 0.94; 
+        const TARGET_TTI = 0.94;   
+
+        let psBarChartInstance = null;
+        let statusPieChartInstance = null;
+
+        function formatPercent(val) {
+            if (val === null || val === undefined || isNaN(val)) return '-';
+            return (val * 100).toFixed(2).replace('.', ',') + '%';
+        }
+
+        function formatNumber(val) {
+            if (val === null || val === undefined || isNaN(val)) return '0';
+            return Number(val).toLocaleString('id-ID');
+        }
+
+        function getBadgeHtml(value, target) {
+            if (value === null || value === undefined || isNaN(value)) return '-';
+            const pctText = formatPercent(value);
+            const isSuccess = value >= target;
+
+            if (isSuccess) {
+                return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <i class="fa-solid fa-circle-check text-[10px]"></i> ${pctText}
+                        </span>`;
+            } else {
+                return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                            <i class="fa-solid fa-circle-xmark text-[10px]"></i> ${pctText}
+                        </span>`;
+            }
+        }
+
+        function showStatus(message, type = 'info') {
+            const el = document.getElementById('status-message');
+            el.classList.remove('hidden', 'bg-blue-100', 'text-blue-800', 'bg-red-100', 'text-red-800', 'bg-emerald-100', 'text-emerald-800');
+            
+            if (type === 'error') {
+                el.classList.add('bg-red-100', 'text-red-800');
+            } else if (type === 'success') {
+                el.classList.add('bg-emerald-100', 'text-emerald-800');
+            } else {
+                el.classList.add('bg-blue-100', 'text-blue-800');
+            }
+            el.innerHTML = message;
+
+            // Otomatis menyembunyikan banner setelah 3 detik jika status sukses
+            if (type === 'success') {
+                setTimeout(() => {
+                    el.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        function renderCharts(witelNames, psValues, totalStatusData) {
+            // 1. Render Bar Chart (Grafik Batang PS per Witel)
+            const barCtx = document.getElementById('psBarChart').getContext('2d');
+            if (psBarChartInstance) psBarChartInstance.destroy();
+
+            psBarChartInstance = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: witelNames,
+                    datasets: [{
+                        label: 'Jumlah Order PS',
+                        data: psValues,
+                        backgroundColor: '#10b981',
+                        hoverBackgroundColor: '#059669',
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Total PS: ${formatNumber(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Plus Jakarta Sans', weight: '600' } }
+                        },
+                        y: {
+                            grid: { color: '#f1f5f9' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 2. Render Pie Chart (Grafik Komposisi Status)
+            const pieCtx = document.getElementById('statusPieChart').getContext('2d');
+            if (statusPieChartInstance) statusPieChartInstance.destroy();
+
+            statusPieChartInstance = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['PRE PI', 'PI (Proses)', 'Fallout (Kendala)', 'QC2', 'PS (Sukses)'],
+                    datasets: [{
+                        data: [
+                            totalStatusData.prepi,
+                            totalStatusData.pi,
+                            totalStatusData.fallout,
+                            totalStatusData.qc2,
+                            totalStatusData.ps
+                        ],
+                        backgroundColor: [
+                            '#3b82f6', 
+                            '#a855f7', 
+                            '#f43f5e', 
+                            '#f59e0b', 
+                            '#10b981'  
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: { family: 'Plus Jakarta Sans', size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                                    return ` ${context.label}: ${formatNumber(value)} (${pct})`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        function processWorkbook(workbook) {
+            try {
+                if (!workbook.SheetNames.includes('Sheet4')) {
+                    showStatus('<i class="fa-solid fa-triangle-exclamation mr-2"></i> Sheet4 tidak ditemukan dalam file excel!', 'error');
+                    return;
+                }
+
+                const sheet = workbook.Sheets['Sheet4'];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
+
+                let tglReportVal = "";
+                let periodeVal = "";
+                let lastUpdateVal = "";
+                let headersRowIdx = -1;
+                let colIndices = {};
+
+                // Find header row dynamically and extract header info
+                for (let i = 0; i < jsonData.length; i++) {
+                    const row = jsonData[i] || [];
+                    const rowStr = row.map(c => String(c || '')).join(' ');
+
+                    if (rowStr.includes('Tanggal Report')) {
+                        const cellVal = row.find(c => c && String(c).includes('Tanggal Report'));
+                        if (cellVal) tglReportVal = cellVal;
+                    }
+                    if (rowStr.includes('PERIODE ORDER & PS')) {
+                        const cellVal = row.find(c => c && String(c).includes('PERIODE ORDER'));
+                        if (cellVal) periodeVal = cellVal;
+                    }
+                    if (rowStr.includes('Last update proses')) {
+                        const cellVal = row.find(c => c && String(c).includes('Last update'));
+                        if (cellVal) lastUpdateVal = cellVal;
+                    }
+
+                    // Check if row has column headers
+                    for (let j = 0; j < row.length; j++) {
+                        const cell = String(row[j] || '').trim();
+                        if (cell === 'WITEL') headersRowIdx = i;
+                    }
+                }
+
+                if (headersRowIdx === -1) {
+                    showStatus('<i class="fa-solid fa-triangle-exclamation mr-2"></i> Baris header WITEL tidak ditemukan!', 'error');
+                    return;
+                }
+
+                // Update Header Subtitle Info
+                // Mengambil tanggal hari ini dalam format YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
+
+                document.getElementById('info-tgl-report').innerHTML = `<i class="fa-regular fa-calendar-check mr-1"></i> ${tglReportVal || 'Tanggal Report : ' + today}`;
+                document.getElementById('info-periode').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> ${periodeVal || 'PERIODE ORDER & PS : 2026-08-01 to 2026-08-26'}`;
+                document.getElementById('info-last-update').innerHTML = `<i class="fa-solid fa-rotate mr-1"></i> ${lastUpdateVal || 'Last update proses : 26-08-2026 07:34:14 WIB (Source: ETL XPRO)'}`;
+
+                // Map header column names to column index
+                const headerRow = jsonData[headersRowIdx];
+                for (let j = 0; j < headerRow.length; j++) {
+                    const cell = String(headerRow[j] || '').trim().toUpperCase();
+                    if (cell.includes('WITEL')) colIndices['WITEL'] = j;
+                    else if (cell.includes('REGISTER') || cell === 'RE') colIndices['RE'] = j;
+                    else if (cell.includes('PRE PI')) colIndices['PREPI'] = j;
+                    else if (cell === 'PI' || cell.includes(' PI ')) colIndices['PI'] = j;
+                    else if (cell.includes('FALLOUT')) colIndices['FALLOUT'] = j;
+                    else if (cell.includes('QC2')) colIndices['QC2'] = j;
+                    else if (cell === 'PS') colIndices['PS'] = j;
+                    else if (cell.includes('PS/RE')) colIndices['PS_RE'] = j;
+                    else if (cell.includes('PS/PI')) colIndices['PS_PI'] = j;
+                    else if (cell.includes('TTI')) colIndices['TTI'] = j;
+                }
+
+                const tbody = document.getElementById('table-body');
+                tbody.innerHTML = '';
+
+                let totalRE = 0, totalPREPI = 0, totalPI = 0, totalQC2 = 0, totalFallout = 0, totalPS = 0;
+                
+                const witelNames = [];
+                const psValues = [];
+
+                for (let i = headersRowIdx + 1; i < jsonData.length; i++) {
+                    const row = jsonData[i] || [];
+                    const witelVal = row[colIndices['WITEL']];
+                    if (!witelVal) continue;
+
+                    const witel = String(witelVal).trim();
+                    const re = Number(row[colIndices['RE']]) || 0;
+                    const prepi = Number(row[colIndices['PREPI']]) || 0;
+                    const pi = Number(row[colIndices['PI']]) || 0;
+                    const fallout = Number(row[colIndices['FALLOUT']]) || 0;
+                    const qc2 = Number(row[colIndices['QC2']]) || 0;
+                    const ps = Number(row[colIndices['PS']]) || 0;
+
+                    const ps_re = row[colIndices['PS_RE']] !== undefined ? Number(row[colIndices['PS_RE']]) : (re ? ps/re : 0);
+                    const ps_pi = row[colIndices['PS_PI']] !== undefined ? Number(row[colIndices['PS_PI']]) : (pi ? ps/pi : 0);
+                    const tti = row[colIndices['TTI']] !== undefined ? Number(row[colIndices['TTI']]) : 0;
+
+                    const isTotalRow = witel.toUpperCase() === 'TOTAL';
+
+                    if (isTotalRow) {
+                        totalRE = re;
+                        totalPREPI = prepi;
+                        totalPI = pi;
+                        totalQC2 = qc2;
+                        totalFallout = fallout;
+                        totalPS = ps;
+                    } else {
+                        witelNames.push(witel);
+                        psValues.push(ps);
+                    }
+
+                    const tr = document.createElement('tr');
+                    if (isTotalRow) {
+                        tr.className = "bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300";
+                    } else {
+                        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                    }
+
+                    tr.innerHTML = `
+                        <td class="py-3.5 px-4 font-bold">${witel}</td>
+                        <td class="py-3.5 px-3 text-right font-semibold">${formatNumber(re)}</td>
+                        <td class="py-3.5 px-3 text-right text-slate-600">${formatNumber(prepi)}</td>
+                        <td class="py-3.5 px-3 text-right font-semibold text-purple-700">${formatNumber(pi)}</td>
+                        <td class="py-3.5 px-3 text-right font-semibold text-rose-600">${formatNumber(fallout)}</td>
+                        <td class="py-3.5 px-3 text-right font-semibold text-amber-600">${formatNumber(qc2)}</td>
+                        <td class="py-3.5 px-3 text-right font-extrabold text-emerald-600">${formatNumber(ps)}</td>
+                        <td class="py-3.5 px-4 text-center">${getBadgeHtml(ps_re, TARGET_PS_RE)}</td>
+                        <td class="py-3.5 px-4 text-center">${getBadgeHtml(ps_pi, TARGET_PS_PI)}</td>
+                        <td class="py-3.5 px-4 text-center">${getBadgeHtml(tti, TARGET_TTI)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+
+                // Update KPI Cards
+                document.getElementById('kpi-re').innerText = formatNumber(totalRE);
+                document.getElementById('kpi-pi').innerText = formatNumber(totalPI);
+                document.getElementById('kpi-qc2').innerText = formatNumber(totalQC2);
+                document.getElementById('kpi-fallout').innerText = formatNumber(totalFallout);
+                document.getElementById('kpi-ps').innerText = formatNumber(totalPS);
+
+                // Render Visualisasi Grafik Batang & Pie
+                renderCharts(witelNames, psValues, {
+                    prepi: totalPREPI,
+                    pi: totalPI,
+                    fallout: totalFallout,
+                    qc2: totalQC2,
+                    ps: totalPS
+                });
+
+                showStatus('<i class="fa-solid fa-circle-check mr-2"></i> Data berhasil dimuat dan diperbarui dari Sheet4!', 'success');
+
+            } catch (err) {
+                console.error(err);
+                showStatus('<i class="fa-solid fa-triangle-exclamation mr-2"></i> Gagal memproses data Sheet4: ' + err.message, 'error');
+            }
+        }
+
+        async function fetchDataFromGitHub() {
+            const url = document.getElementById('github-url').value.trim();
+            const syncIcon = document.getElementById('btn-sync-icon');
+            syncIcon.classList.add('fa-spin');
+            
+            showStatus('<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengunduh file dari GitHub...', 'info');
+
+            try {
+                const response = await fetch(url + '?v=' + new Date().getTime());
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                const data = await response.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+                processWorkbook(workbook);
+            } catch (err) {
+                showStatus(`<i class="fa-solid fa-triangle-exclamation mr-2"></i> Gagal mengambil data dari GitHub: ${err.message}`, 'error');
+            } finally {
+                syncIcon.classList.remove('fa-spin');
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                processWorkbook(workbook);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDataFromGitHub();
         });
-      });
-
-      if (colDone === -1) colDone = 3;
-      if (colInput === -1) colInput = 4;
-      if (colOgp === -1) colOgp = 5;
-
-      let parsedRows = [];
-      let currentVenue = '';
-
-      data.forEach((row) => {
-        let firstCol = row[colVenue] ? row[colVenue].trim() : '';
-        let secondCol = row[colLayanan] ? row[colLayanan].trim() : '';
-
-        firstCol = firstCol.replace(/^[\-\+\s]+/, '').trim();
-
-        if (firstCol.toUpperCase().includes('COUNTA OF') || secondCol.toUpperCase().includes('LAYANAN') || secondCol.toUpperCase().includes('STATUS INTEGRASI')) {
-          return;
-        }
-
-        if (firstCol && !firstCol.toUpperCase().includes('GRAND TOTAL') && !firstCol.toUpperCase().includes('TOTAL')) {
-          currentVenue = firstCol;
-        }
-
-        const layanan = secondCol;
-        if (!layanan || layanan === '0') return;
-
-        let done = cleanNum(row[colDone]);
-        let ogp = cleanNum(row[colOgp]);
-        let rawInput = cleanNum(row[colInput]);
-
-        // REVISI LOGIKA UTAMA:
-        // Input Order murni dikurangi data OGP/PROGRESS agar tidak terhitung ganda
-        let input = Math.max(0, rawInput - ogp); 
-
-        let total = done + input + ogp;
-        let achievePct = total > 0 ? ((done / total) * 100).toFixed(1).replace('.', ',') + '%' : '0,0%';
-
-        if (total > 0) {
-          parsedRows.push({
-            venue: currentVenue,
-            isMain: isMainVenue(currentVenue),
-            layanan: layanan,
-            done: done,
-            input: input,
-            ogp: ogp,
-            total: total,
-            achievePct: achievePct
-          });
-        }
-      });
-
-      let groupedByVenue = {};
-      parsedRows.forEach(item => {
-        if (!groupedByVenue[item.venue]) {
-          groupedByVenue[item.venue] = {
-            isMain: item.isMain,
-            items: []
-          };
-        }
-        groupedByVenue[item.venue].items.push(item);
-      });
-
-      let venueKeys = Object.keys(groupedByVenue);
-      venueKeys.sort((a, b) => {
-        let isMainA = groupedByVenue[a].isMain;
-        let isMainB = groupedByVenue[b].isMain;
-        if (isMainA && !isMainB) return -1;
-        if (!isMainA && isMainB) return 1;
-        return a.localeCompare(b);
-      });
-
-      let totalDoneSum = 0, totalInputSum = 0, totalOgpSum = 0, totalOverallSum = 0;
-      let venueDataMap = {};
-
-      const tBody = document.getElementById('table-body');
-      tBody.innerHTML = '';
-
-      venueKeys.forEach(vKey => {
-        let group = groupedByVenue[vKey];
-        let items = group.items;
-
-        items.forEach((item, index) => {
-          totalDoneSum += item.done;
-          totalInputSum += item.input;
-          totalOgpSum += item.ogp;
-          totalOverallSum += item.total;
-
-          if (!venueDataMap[item.venue]) {
-            venueDataMap[item.venue] = { done: 0, input: 0, ogp: 0, isMain: item.isMain };
-          }
-          venueDataMap[item.venue].done += item.done;
-          venueDataMap[item.venue].input += item.input;
-          venueDataMap[item.venue].ogp += item.ogp;
-
-          const tr = document.createElement('tr');
-          if (item.isMain) tr.className = 'row-main-venue';
-
-          let venueCellHtml = '';
-          if (index === 0) {
-            const venueDisplayName = item.isMain && !item.venue.includes('★') ? `${item.venue} ★` : item.venue;
-            venueCellHtml = `<strong>${venueDisplayName}</strong>`;
-          }
-
-          tr.innerHTML = `
-            <td>${venueCellHtml}</td>
-            <td>${item.layanan}</td>
-            <td>${item.done > 0 ? `<span class="badge badge-done">${item.done}</span>` : '-'}</td>
-            <td class="achieve-text">${item.achievePct}</td>
-            <td>${item.input > 0 ? `<span class="badge badge-input">${item.input}</span>` : '-'}</td>
-            <td>${item.ogp > 0 ? `<span class="badge badge-ogp">${item.ogp}</span>` : '-'}</td>
-            <td>${item.total}</td>
-          `;
-          tBody.appendChild(tr);
-        });
-      });
-
-      const achieveOverallPct = totalOverallSum > 0 ? ((totalDoneSum / totalOverallSum) * 100).toFixed(1).replace('.', ',') + '%' : '0,0%';
-      const trTotal = document.createElement('tr');
-      trTotal.className = 'total-row';
-      trTotal.innerHTML = `
-        <td colspan="2">TOTAL KESELURUHAN</td>
-        <td>${totalDoneSum}</td>
-        <td class="achieve-text">${achieveOverallPct}</td>
-        <td>${totalInputSum}</td>
-        <td>${totalOgpSum}</td>
-        <td>${totalOverallSum}</td>
-      `;
-      tBody.appendChild(trTotal);
-
-      // Update Card Metrics
-      document.getElementById('total-order').innerText = totalOverallSum;
-      document.getElementById('total-input').innerText = totalInputSum;
-      document.getElementById('total-ogp').innerText = totalOgpSum;
-      document.getElementById('total-done').innerText = totalDoneSum;
-      document.getElementById('total-achieve').innerText = achieveOverallPct;
-
-      // Render Charts
-      const sortedVenuesForChart = Object.keys(venueDataMap).sort((a, b) => {
-        if (venueDataMap[a].isMain && !venueDataMap[b].isMain) return -1;
-        if (!venueDataMap[a].isMain && venueDataMap[b].isMain) return 1;
-        return a.localeCompare(b);
-      });
-
-      const chartDone = sortedVenuesForChart.map(v => venueDataMap[v].done);
-      const chartOgp = sortedVenuesForChart.map(v => venueDataMap[v].ogp);
-      const chartInput = sortedVenuesForChart.map(v => venueDataMap[v].input);
-
-      const ctxVenue = document.getElementById('venueChart').getContext('2d');
-      if (venueChart) venueChart.destroy();
-      venueChart = new Chart(ctxVenue, {
-        type: 'bar',
-        data: {
-          labels: sortedVenuesForChart,
-          datasets: [
-            { label: 'DONE', data: chartDone, backgroundColor: '#059669' },
-            { label: 'OGP', data: chartOgp, backgroundColor: '#d97706' },
-            { label: 'INPUT ORDER', data: chartInput, backgroundColor: '#0284c7' }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'top' } },
-          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-        }
-      });
-
-      const ctxStatus = document.getElementById('statusChart').getContext('2d');
-      if (statusChart) statusChart.destroy();
-      statusChart = new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-          labels: ['DONE', 'OGP', 'INPUT ORDER'],
-          datasets: [{
-            data: [totalDoneSum, totalOgpSum, totalInputSum],
-            backgroundColor: ['#059669', '#d97706', '#0284c7']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } }
-        }
-      });
-    }
-  </script>
+    </script>
 </body>
 </html>
